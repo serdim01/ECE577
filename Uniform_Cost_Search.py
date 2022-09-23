@@ -127,9 +127,11 @@ def createRomaniaTree():
     
     return mapDict
 
+
 def main():
     mapGraph = createRomaniaTree()
     frontier = queue.Queue()
+    pathCost = queue.Queue()
     visited = [];    
     start = "blah"
     while (not(start in mapGraph)):
@@ -147,47 +149,45 @@ def main():
         if start == goal:
             print("You are already here!")
             return
-    frontier.put_nowait(mapGraph[start]);      
-    current_state = frontier.get()
+        
+    
+    frontier = [mapGraph[start]];      
+    current_state = frontier.pop()
+    pathCost = [0]
+    current_cost = pathCost.pop();
     from_where = [start]
     current_path = from_where.pop();
     print()
     # Loop until we reach goal state
     while(current_state.Name != goal):
+        
         # Explore on current level
-        print("CurrentState: " + current_state.Name)        
+        print("CurrentState: " + current_state.Name)
+        print("Current Path Cost: " + str(current_cost))
         for kids in current_state.children:
             if not((kids) in visited):
                 print("Pushing: " + kids)
-                frontier.put_nowait(mapGraph[kids])
-                from_where.append(current_path + " -> " + kids)    
-        
+                pathCost.append(current_cost + current_state.children[kids])
+                frontier.append(kids)
+                from_where.append(current_path + " -> " + kids)
+        # https://stackoverflow.com/questions/6618515/sorting-list-based-on-values-from-another-list        
+        frontier = [x for _,x in sorted(zip(pathCost,frontier), reverse=True)]
+        from_where = [x for _,x in sorted(zip(pathCost,from_where), reverse=True)]                               
+        # Add current site to visited list
         visited.append(current_state.Name)
-        current_state = frontier.get()
-        current_path = from_where.pop(0)
+        # Pop from frontier to get next state
+        current_state = mapGraph[frontier.pop()]
+        # Sort path costs, will be same order as frontier
+        pathCost.sort(reverse=True)
+        # Pop cost of path of current state 
+        current_cost = pathCost.pop()
+        current_path = from_where.pop()
         print("Popping: " + current_state.Name)
-        print("Current path exploring: " + current_path)
-    print()    
-    print("Final route = " + current_path)
-#    # We have reached destination at this point now we traverse up 
-#    route = []
-#    # route back state is string
-#    route_back_state = current_state.Name
-#    route.append(route_back_state)
-#    while (route_back_state != start):
-#        for names in visited:
-#            if route_back_state in mapGraph[names].children:
-#                route_back_state = names
-#                route.append(route_back_state)
-#                break
-#    route.reverse()
-#    print()
-#    print("Route =", end = " ")
-#    for cities in route:
-#        if cities == route[-1]:
-#            print(cities)
-#        else:
-#            print(cities + " ->", end=" ")        
-                
+        print("Current path: " + current_path)
+
+    print()
+    print("Final Route = "+ current_path)
+    print("Final distance = " + str(current_cost))
+
 if __name__ == "__main__":
     main()
