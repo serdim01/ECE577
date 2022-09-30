@@ -6,7 +6,9 @@ Created on Thu Sep 22 14:12:49 2022
 """
 # https://stackoverflow.com/questions/2482602/a-general-tree-implementation
 import queue
-       
+import csv
+import time
+    
 class TreeNode(object):
     def __init__(self, name):
         self.Name = name
@@ -15,6 +17,41 @@ class TreeNode(object):
     def add_child(self, name, cost):
         self.children[name] = cost
 
+class TreeNode_US(object):
+    def __init__(self, name, number, state):
+        self.Name = name
+        self.children = dict()
+        self.Number = number
+        self.State = state
+    def add_child(self, name, cost):
+        self.children[name] = cost
+
+def readinTowns():
+    cityDict = dict()
+    with open("C:/Users/CJ/Documents/Grad_2022-23/ECE577/Project1/sf12010placename.txt") as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter='\t')
+        line_count = 0
+        for row in csv_reader:
+            if line_count == 0:
+                line_count += 1
+            else:
+                StateNumber = int(row[0])*100000 + int(row[2])
+                StateNumberStr = str(StateNumber).zfill(7)
+                cityDict[StateNumberStr] = TreeNode_US(row[3], StateNumberStr, row[1])
+                
+    with open("C:/Users/CJ/Documents/Grad_2022-23/ECE577/Project1/sf12010placedistance25miles.csv") as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            if line_count == 0:
+                line_count += 1
+            else:
+                StateNumber1 = int(row[0])*100000 + int(row[1])
+                StateNumberStr1 = str(StateNumber1).zfill(7)
+                StateNumber2 = int(row[3])*100000 + int(row[4])
+                StateNumberStr2 = str(StateNumber2).zfill(7)
+                cityDict[StateNumberStr1].add_child(StateNumberStr2, row[2])    
+    return cityDict
 
         
 def createRomaniaTree():
@@ -128,66 +165,72 @@ def createRomaniaTree():
     return mapDict
 
 def main():
-    mapGraph = createRomaniaTree()
+    #mapGraph = createRomaniaTree()
+    cityGraph = readinTowns()
     frontier = queue.Queue()
-    visited = [];    
-    start = "blah"
-    while (not(start in mapGraph)):
-        print("Enter start city:" )
-        start = input()
-        if not(start in mapGraph):
+    visited = []; 
+    frontier_dict = dict()
+    visited_dict = dict()
+    start = 0
+    while (start == 0):
+        print("Enter start state:" )
+        start_state = input()
+        print("Enter start city:")
+        start_city = input()
+        for city in cityGraph:
+            if ((cityGraph[city].Name == start_city) and (cityGraph[city].State == start_state)):
+                start = cityGraph[city].Number
+        if (start == 0):
             print("Invalid city name!")
     
-    goal = "blah"
-    while (not(goal in mapGraph)):
-        print("Enter destination:" ) 
-        goal = input()        
-        if not(goal in mapGraph):
+    goal = 0
+    while (goal == 0):
+        print("Enter destination state:" )
+        goal_state = input()
+        print("Enter destination city:")
+        goal_city = input()
+        for city in cityGraph:
+            if ((cityGraph[city].Name == goal_city) and (cityGraph[city].State == goal_state)):
+                goal = cityGraph[city].Number
+        if (goal == 0):
             print("Invalid city name!")
-        if start == goal:
-            print("You are already here!")
-            return
-    frontier.put_nowait(mapGraph[start]);      
+    st = time.time()   
+    frontier.put_nowait(cityGraph[start]);      
     current_state = frontier.get()
-    from_where = [start]
+    from_where = [cityGraph[start].Name + ", " + cityGraph[start].State ]
     current_path = from_where.pop();
     print()
     # Loop until we reach goal state
-    while(current_state.Name != goal):
+    while(current_state.Number != goal):
         # Explore on current level
-        print("CurrentState: " + current_state.Name)        
+             
         for kids in current_state.children:
-            if not((kids) in visited):
-                print("Pushing: " + kids)
-                frontier.put_nowait(mapGraph[kids])
-                from_where.append(current_path + " -> " + kids)    
+            if not(kids in visited_dict.keys()):
+                #print("Enqueue: " + kids)
+                if not(kids in frontier_dict.keys()):
+                    frontier.put_nowait(cityGraph[kids])
+                    frontier_dict[kids] = cityGraph[kids].Name
+                    from_where.append(current_path + " -> " + cityGraph[kids].Name + ", " + cityGraph[kids].State )    
         
-        visited.append(current_state.Name)
+        visited_dict[current_state.Number] = current_state.Name
+        if frontier.qsize == 0:
+            print("No possible route")
+            return
+        
         current_state = frontier.get()
+        #print("CurrentState: " + current_state.Name)   
+        del frontier_dict[current_state.Number]
         current_path = from_where.pop(0)
-        print("Popping: " + current_state.Name)
-        print("Current path exploring: " + current_path)
+        #print("Dequeue: " + current_state.Number)
+        
+        #print("Current path exploring: " + current_path)
+    et = time.time()
+    elapsed_time = et - st
+    print('Execution time:', elapsed_time, 'seconds')
+    
     print()    
     print("Final route = " + current_path)
-#    # We have reached destination at this point now we traverse up 
-#    route = []
-#    # route back state is string
-#    route_back_state = current_state.Name
-#    route.append(route_back_state)
-#    while (route_back_state != start):
-#        for names in visited:
-#            if route_back_state in mapGraph[names].children:
-#                route_back_state = names
-#                route.append(route_back_state)
-#                break
-#    route.reverse()
-#    print()
-#    print("Route =", end = " ")
-#    for cities in route:
-#        if cities == route[-1]:
-#            print(cities)
-#        else:
-#            print(cities + " ->", end=" ")        
+    
                 
 if __name__ == "__main__":
     main()
