@@ -125,9 +125,10 @@ def main():
         # Initial update of current state      
         current_state = frontier.pop(-1)
         frontier_dict[current_state.Number] = Tree(current_state.Number, 0)
-    
+        goal_reached_flag = 0
+        no_route = 0
     # Goal Check - Loop until we reach goal
-        while(current_state.Number != goal):
+        while(1):
         # Explore on current level - kids is the city ID number [string]
         # Iterate through adjacent towns fro current state
             for kids in cityGraph[current_state.Number].children:
@@ -140,10 +141,17 @@ def main():
                         pathCostToChild = current_state.PathCost + float(cityGraph[current_state.Number].children[kids])
                         frontier_dict[kids] = frontier_dict[current_state.Number].add_child(kids, pathCostToChild)
                         frontier.append(priorityQueueObject(kids,pathCostToChild ))
-        
+                        if kids == goal:
+                            visited_dict[current_state.Number] = frontier_dict[current_state.Number]
+                            current_state = frontier.pop(0);
+                            goal_reached_flag = 1
+                            break
         # Add current state to visited - visited is the main tree we are creating            
             visited_dict[current_state.Number] = frontier_dict[current_state.Number] 
-        
+            
+            if goal_reached_flag == 1:
+                break
+            
         # If no more items in our queue then we cannot reach goal
             if len(frontier) == 0:
                 print("No possible route for " + cityGraph[start].Name + " to " + cityGraph[goal].Name)
