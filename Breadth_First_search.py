@@ -168,6 +168,10 @@ def main():
             print(cities)
         else:
             print(cities + " -> ", end='')
+    
+    print("Number of Nodes Visited: " + str(len(visited_dict)))        
+#    for places in visited_dict:
+#         print(visited_dict[places])
                 
 if __name__ == "__main__":
     main()

@@ -81,7 +81,6 @@ def main():
     frontier1 = queue.Queue()
     frontier_dict1 = dict()
     visited_dict1 = dict()
-    
     frontier2 = queue.Queue()
     frontier_dict2 = dict()
     visited_dict2 = dict()
@@ -121,7 +120,7 @@ def main():
     frontier_dict2[current_state2.Number] = Tree(current_state2.Number)
     
     frontier_intersection_flag = 0
-    
+    intersections = 0;
     # Goal Check - Loop until we reach goal
     while(frontier_intersection_flag == 0):
         # Explore on current level - kids is the city ID number [string]
@@ -138,7 +137,6 @@ def main():
                     # Add children to current state frontier dict
                     # Children are themselves a tree node
                     frontier_dict1[kids] = frontier_dict1[current_state1.Number].add_child(kids)
-
         ## From start branch
         for kids in current_state2.children:
             # Check if the adjacent towns is in visited dict or frontier dict
@@ -150,24 +148,21 @@ def main():
                     # Add children to current state frontier dict
                     # Children are themselves a tree node
                     frontier_dict2[kids] = frontier_dict2[current_state2.Number].add_child(kids) 
-                    
+                    if kids in frontier_dict1.keys():
+                        intersections+=1;
+                        intersection_point = kids
+                        break;
+                        
         # Add current state to visited - visited is the main tree we are creating            
         visited_dict1[current_state1.Number] = frontier_dict1[current_state1.Number] 
         visited_dict2[current_state2.Number] = frontier_dict2[current_state2.Number] 
         
-        intersections = 0;
-        for key in frontier_dict1:
-            if key in frontier_dict2:
-                intersections +=1
-                intersection_point = key
-                print(intersection_point)
-                break;
         
         if intersections== 0:
             frontier_intersection_flag = 0;
         else:
             frontier_intersection_flag = 1;
-    
+            break;
         # If no more items in our queue then we cannot reach goal
         if frontier1.qsize == 0 or frontier2.qsize == 0:
             print("No possible route")
@@ -210,6 +205,7 @@ def main():
     path = path_reverse_order1 + path_reverse_order2[1:]
     depth =len(path) - 1
     print("Depth = " + str(depth))
+    print("Number of Nodes Visited: " + str(len(visited_dict1) + len(visited_dict2)))        
     # Print Route
     for cities in path:
         if cities == (goal_city + ", " + goal_state):
