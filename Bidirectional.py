@@ -108,50 +108,6 @@ def intersection_check(intersections, visited_dict1, visited_dict2, cityGraph, s
     index_min = min(range(len(depth_of_ints)), key=depth_of_ints.__getitem__) 
     return intersections[index_min]
 
-def exhaust_frontier(frontier1, frontier2, frontier_dict1, frontier_dict2, intersections, cityGraph, visited_dict1, visited_dict2):
-    while((len(frontier1) > 0) and (len(frontier2) > 0)):
-        current_state1 = frontier1.pop(0)
-        current_state2 = frontier2.pop(0)
-        ## From start branch
-        for kids in cityGraph[current_state1.Number].children:
-            # Check if the adjacent towns is in visited dict or frontier dict
-            # Only add if not in visited or frontier
-            if not(kids in visited_dict1.keys()):
-                if not(kids in frontier_dict1.keys()):
-                    # Enqueue to frontier
-                    pathCostToChild = current_state1.PathCost + float(cityGraph[current_state1.Number].children[kids])
-                    frontier_dict1[kids] = frontier_dict1[current_state1.Number].add_child(kids, pathCostToChild)
-                    frontier1.append(priorityQueueObject(kids,pathCostToChild ))
-                    # Add children to current state frontier dict
-                    # Children are themselves a tree node
-                    if kids in frontier_dict2.keys():
-                        intersections.append(kids)
-                        visited_dict1[kids] = frontier_dict1[kids]
-                        visited_dict2[kids] = frontier_dict2[kids] 
-
-        ## From start branch
-        for kids in cityGraph[current_state2.Number].children:
-            # Check if the adjacent towns is in visited dict or frontier dict
-            # Only add if not in visited or frontier
-            if not(kids in visited_dict2.keys()):
-                if not(kids in frontier_dict2.keys()):
-                    # Enqueue to frontier
-                    pathCostToChild = current_state2.PathCost + float(cityGraph[current_state2.Number].children[kids])
-                    frontier_dict2[kids] = frontier_dict2[current_state2.Number].add_child(kids, pathCostToChild)
-                    frontier2.append(priorityQueueObject(kids,pathCostToChild ))
-                    # Add children to current state frontier dict
-                    # Children are themselves a tree node
-                    if kids in frontier_dict1.keys():
-                        intersections.append(kids)
-                        visited_dict1[kids] = frontier_dict1[kids]
-                        visited_dict2[kids] = frontier_dict2[kids]  
-        # Add current state to visited - visited is the main tree we are creating            
-        visited_dict1[current_state1.Number] = frontier_dict1[current_state1.Number] 
-        visited_dict2[current_state2.Number] = frontier_dict2[current_state2.Number]  
-        # Add current state to visited - visited is the main tree we are creating            
-        visited_dict1[current_state1.Number] = frontier_dict1[current_state1.Number] 
-        visited_dict2[current_state2.Number] = frontier_dict2[current_state2.Number] 
-    return intersections
     
 def main():
     # cityGraph is our problem space - all 
@@ -196,55 +152,69 @@ def main():
     
     frontier_dict1[current_state1.Number] = Tree(current_state1.Number,0)
     frontier_dict2[current_state2.Number] = Tree(current_state2.Number,0)
-        
-    frontier_intersection_flag = 0
+
     intersections = 0;
     intersection_point = [];
-    # Goal Check - Loop until we reach goal
+    level = 0
+    number_of_nodes_on_current_depth1 = 0
+    number_of_nodes_on_current_depth2 = 0
     while(1):
         # Explore on current level - kids is the city ID number [string]
         # Iterate through adjacent towns fro current state
-        
+        level+=1
+        number_of_nodes_on_current_depth1 = (len(frontier1) - number_of_nodes_on_current_depth1)
+        number_of_nodes_on_current_depth2 = (len(frontier2) - number_of_nodes_on_current_depth2)
         ## From start branch
-        for kids in cityGraph[current_state1.Number].children:
+        iterations = 1
+        while(1):
+            iterations+=1
+            for kids in cityGraph[current_state1.Number].children:
             # Check if the adjacent towns is in visited dict or frontier dict
             # Only add if not in visited or frontier
-            if not(kids in visited_dict1.keys()):
-                if not(kids in frontier_dict1.keys()):
+                if not(kids in visited_dict1.keys()):
+                    if not(kids in frontier_dict1.keys()):
                     # Enqueue to frontier
-                    pathCostToChild = current_state1.PathCost + float(cityGraph[current_state1.Number].children[kids])
-                    frontier_dict1[kids] = frontier_dict1[current_state1.Number].add_child(kids, pathCostToChild)
-                    frontier1.append(priorityQueueObject(kids,pathCostToChild ))
-                    # Add children to current state frontier dict
-                    # Children are themselves a tree node
-                    if kids in frontier_dict2.keys():
-                        intersections+=1;
-                        intersection_point.append(kids)
-                        visited_dict1[kids] = frontier_dict1[kids]
-                        visited_dict2[kids] = frontier_dict2[kids] 
-
+                        pathCostToChild = current_state1.PathCost + float(cityGraph[current_state1.Number].children[kids])
+                        frontier_dict1[kids] = frontier_dict1[current_state1.Number].add_child(kids, pathCostToChild)
+                        frontier1.append(priorityQueueObject(kids,pathCostToChild ))
+                        # Add children to current state frontier dict
+                        # Children are themselves a tree node
+                        if kids in frontier_dict2.keys():
+                            intersections+=1;
+                            intersection_point.append(kids)
+                            visited_dict1[kids] = frontier_dict1[kids]
+                            visited_dict2[kids] = frontier_dict2[kids] 
+            visited_dict1[current_state1.Number] = frontier_dict1[current_state1.Number] 
+            del frontier_dict1[current_state1.Number]
+            current_state1 = frontier1.pop(0)
+            if not(iterations < number_of_nodes_on_current_depth1):
+                break
         ## From goal branch
-        for kids in cityGraph[current_state2.Number].children:
+        iterations = 1
+        while(1):
+            iterations+=1
+            for kids in cityGraph[current_state2.Number].children:
             # Check if the adjacent towns is in visited dict or frontier dict
             # Only add if not in visited or frontier
-            if not(kids in visited_dict2.keys()):
-                if not(kids in frontier_dict2.keys()):
+                if not(kids in visited_dict2.keys()):
+                    if not(kids in frontier_dict2.keys()):
                     # Enqueue to frontier
-                    pathCostToChild = current_state2.PathCost + float(cityGraph[current_state2.Number].children[kids])
-                    frontier_dict2[kids] = frontier_dict2[current_state2.Number].add_child(kids, pathCostToChild)
-                    frontier2.append(priorityQueueObject(kids,pathCostToChild ))
+                        pathCostToChild = current_state2.PathCost + float(cityGraph[current_state2.Number].children[kids])
+                        frontier_dict2[kids] = frontier_dict2[current_state2.Number].add_child(kids, pathCostToChild)
+                        frontier2.append(priorityQueueObject(kids,pathCostToChild ))
                     # Add children to current state frontier dict
                     # Children are themselves a tree node
-                    if kids in frontier_dict1.keys():
-                        intersections+=1;
-                        intersection_point.append(kids)
-                        visited_dict1[kids] = frontier_dict1[kids]
-                        visited_dict2[kids] = frontier_dict2[kids]  
-        # Add current state to visited - visited is the main tree we are creating            
-        visited_dict1[current_state1.Number] = frontier_dict1[current_state1.Number] 
-        visited_dict2[current_state2.Number] = frontier_dict2[current_state2.Number] 
-        
-        
+                        if kids in frontier_dict1.keys():
+                            intersections+=1;
+                            intersection_point.append(kids)
+                            visited_dict1[kids] = frontier_dict1[kids]
+                            visited_dict2[kids] = frontier_dict2[kids]  
+            # Add current state to visited - visited is the main tree we are creating            
+            visited_dict2[current_state2.Number] = frontier_dict2[current_state2.Number] 
+            del frontier_dict2[current_state2.Number]
+            current_state2 = frontier2.pop(0)
+            if not(iterations < number_of_nodes_on_current_depth2):
+                break
         if intersections > 0:
             break;
         # If no more items in our queue then we cannot reach goal
@@ -252,27 +222,23 @@ def main():
             print("No possible route")
             return
         
-        # Dequeue Current state and delete from fronteir dict        
-        del frontier_dict1[current_state1.Number]
-        del frontier_dict2[current_state2.Number]
-        current_state1 = frontier1.pop(0)
-        current_state2 = frontier2.pop(0)
-    
     # Print excecution time
+
+    print("Number of Nodes Visited: " + str(len(visited_dict1) + len(visited_dict2))) 
+    num_nodes = len(visited_dict1) + len(visited_dict2);
+    # Use visited tree to find path found
+    #exhaust_frontier(frontier1, frontier2, frontier_dict1, frontier_dict2, intersections, cityGraph, visited_dict1, visited_dict2)
+    #all_intersections = exhaust_frontier(frontier1, frontier2, frontier_dict1, frontier_dict2, intersection_point, cityGraph, visited_dict1, visited_dict2)
+    # intersection_check(intersections, visited_dict1, visited_dict2, cityGraph, start, goal)
+    best_intersection = intersection_check(intersection_point, visited_dict1, visited_dict2, cityGraph, start, goal)
+    state = best_intersection
+    path_reverse_order1 = list()
+    
     et = time.time()
     elapsed_time = et - st
     
     print('Execution time:', elapsed_time, 'seconds')
     print()
-    print("Number of Nodes Visited: " + str(len(visited_dict1) + len(visited_dict2))) 
-    num_nodes = len(visited_dict1) + len(visited_dict2);
-    # Use visited tree to find path found
-    #exhaust_frontier(frontier1, frontier2, frontier_dict1, frontier_dict2, intersections, cityGraph, visited_dict1, visited_dict2)
-    all_intersections = exhaust_frontier(frontier1, frontier2, frontier_dict1, frontier_dict2, intersection_point, cityGraph, visited_dict1, visited_dict2)
-    # intersection_check(intersections, visited_dict1, visited_dict2, cityGraph, start, goal)
-    best_intersection = intersection_check(all_intersections, visited_dict1, visited_dict2, cityGraph, start, goal)
-    state = best_intersection
-    path_reverse_order1 = list()
     
     while state != start:
         path_reverse_order1.append(cityGraph[state].Name + ", " + (cityGraph[state].State))
