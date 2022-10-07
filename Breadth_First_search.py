@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Sep 22 14:12:49 2022
-
 @author: CJ
 """
 import queue
@@ -106,9 +105,8 @@ def main():
     # Initial update of current state      
     current_state = frontier.get()
     frontier_dict[current_state.Number] = Tree(current_state.Number)
-    
-    # Goal Check - Loop until we reach goal
-    while(current_state.Number != goal):
+    goal_reached_flag = 0
+    while(1):
         # Explore on current level - kids is the city ID number [string]
         # Iterate through adjacent towns fro current state
         for kids in current_state.children:
@@ -121,10 +119,18 @@ def main():
                     # Add children to current state frontier dict
                     # Children are themselves a tree node
                     frontier_dict[kids] = frontier_dict[current_state.Number].add_child(kids)
+                    # Goal Check - Loop until we reach goal
+                    if kids == goal:
+                        visited_dict[current_state.Number] = frontier_dict[current_state.Number]
+                        current_state = cityGraph[kids];
+                        goal_reached_flag = 1
+                        break
         
         # Add current state to visited - visited is the main tree we are creating            
-        visited_dict[current_state.Number] = frontier_dict[current_state.Number] 
+        visited_dict[current_state.Number] = frontier_dict[current_state.Number]
         
+        if goal_reached_flag == 1:
+            break
         # If no more items in our queue then we cannot reach goal
         if frontier.qsize == 0:
             print("No possible route")
@@ -154,6 +160,8 @@ def main():
     path_reverse_order.append(cityGraph[start].Name + ", " + (cityGraph[start].State))
     # Reverse order as we started at goal
     path_reverse_order.reverse()
+    depth =len(path_reverse_order) - 1
+    print("Depth = " + str(depth))
     # Print Route
     for cities in path_reverse_order:
         if cities == (goal_city + ", " + goal_state):
