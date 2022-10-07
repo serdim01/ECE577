@@ -84,7 +84,7 @@ def main():
     visited_dict = dict()
     file = open("BFS_NewEngland_Results.txt", "w")
     writer = csv.writer(file)
-    writer.writerow(["ID Number", "City Name", "State", "Depth", "Excecution Time", "Cost"])
+    writer.writerow(["ID Number", "City Name", "State", "Depth", "Excecution Time", "Cost", "Nodes Expanded"])
     #Goals
     start = "2545000"
     Goal_cities = []
@@ -92,30 +92,6 @@ def main():
         if cityGraph[cities].State == "Massachusetts" or cityGraph[cities].State == "Vermont" or cityGraph[cities].State == "Rhode Island" or cityGraph[cities].State == "Connecticut" or cityGraph[cities].State == "Maine" or cityGraph[cities].State == "New Hampshire":
             if cityGraph[cities].Number != start:
                 Goal_cities.append(cityGraph[cities].Number)
-    # Get user input for start and goal
-#    start = 0
-#    while (start == 0):
-#        print("Enter start state:" )
-#        start_state = input()
-#        print("Enter start city:")
-#        start_city = input()
-#        for city in cityGraph:
-#            if ((cityGraph[city].Name == start_city) and (cityGraph[city].State == start_state)):
-#                start = cityGraph[city].Number
-#        if (start == 0):
-#            print("Invalid city name!")    
-#    goal = 0
-#    while (goal == 0):
-#        print("Enter destination state:" )
-#        goal_state = input()
-#        print("Enter destination city:")
-#        goal_city = input()
-#        # Initial Goal Check
-#        for city in cityGraph:
-#            if ((cityGraph[city].Name == goal_city) and (cityGraph[city].State == goal_state)):
-#                goal = cityGraph[city].Number
-#        if (goal == 0):
-#            print("Invalid city name!")
 
     for goal in Goal_cities:
         frontier = [priorityQueueObject(cityGraph[start].Number, 0)];      
@@ -156,46 +132,52 @@ def main():
             if len(frontier) == 0:
                 print("No possible route for " + cityGraph[start].Name + " to " + cityGraph[goal].Name)
                 no_route = 1;
+                et = time.time()
+                elapsed_time = et - st
                 break;
         
             # Dequeue Current state and delete from fronteir dict        
             del frontier_dict[current_state.Number]
             current_state = frontier.pop(0)  
     
-        # Bookeeping - don't add goal to visited in loop - do now for graph traversal    
-        visited_dict[current_state.Number] = frontier_dict[current_state.Number]  
-    
-        # Print excecution time
+        # Bookeeping - don't add goal to visited in loop - do now for graph traversal
         et = time.time()
-        elapsed_time = et - st
-        
         if (current_state.Number == goal):
-                no_route = 0;
+            no_route = 0;
+        if not(no_route):
+            visited_dict[goal] = frontier_dict[goal]             
+            # Print excecution time
+            elapsed_time = et - st
+        
+
         #print('Execution time:', elapsed_time, 'seconds')
         #print()
     
     # Use visited tree to find path found
-        state = current_state.Number
-        path_reverse_order = list()
-        while state != start:
-            path_reverse_order.append(cityGraph[state].Name + ", " + (cityGraph[state].State))
-            state = visited_dict[state].parent.data
+            state = goal
+            path_reverse_order = list()
+            while state != start:
+                path_reverse_order.append(cityGraph[state].Name + ", " + (cityGraph[state].State))
+                state = visited_dict[state].parent.data
  
         # Loop won't add start
-        path_reverse_order.append(cityGraph[start].Name + ", " + (cityGraph[start].State))
+            path_reverse_order.append(cityGraph[start].Name + ", " + (cityGraph[start].State))
         # Reverse order as we started at goal
-        # path_reverse_order.reverse()
+            path_reverse_order.reverse()
         # Print Route
-        depth =len(path_reverse_order) - 1
+            depth =len(path_reverse_order) - 1
         #print("Depth = " + str(depth))
-        finalPathCost = current_state.PathCost
-        if not(no_route):    
-            writer.writerow([cityGraph[goal].Number, cityGraph[goal].Name, cityGraph[goal].State, depth, elapsed_time, finalPathCost])
-#        for cities in path_reverse_order:
-#            if cities == (goal_city + ", " + goal_state):
-#                print(cities)
-#        else:
-#                print(cities + " -> ", end='')
+            finalPathCost = current_state.PathCost
+        
+            writer.writerow([cityGraph[goal].Number, cityGraph[goal].Name, cityGraph[goal].State, depth, elapsed_time, finalPathCost, len(visited_dict)])
+#            for cities in path_reverse_order:
+#                if cities == (cityGraph[goal].Name + ", " + cityGraph[goal].State):
+#                    print(cities)
+#                    print(" ")
+#                    print(" ")
+#                else:
+#                    print(cities + " -> ", end='')
+                
                 
 if __name__ == "__main__":
     main()
